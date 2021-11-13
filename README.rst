@@ -103,10 +103,8 @@ A more robust approach is to use the analysis of variance statistical method to 
 
 The mean variance within zones is defined as:
 
-.. math:: 
-
-    MVWZ = \frac{\sum_{i}^{n_1}\left ( X_i-\overline{X_1} \right )^{2}+\sum_{i}^{n_2}\left ( X_i-\overline{X_2} \right )^{2}}{n_1+n_2-2}
-    :label: mean variance within zones
+:math: `MVWZ = \frac{\sum_{i}^{n_1}\left ( X_i-\overline{X_1} \right )^{2}+\sum_{i}^{n_2}\left ( X_i-\overline{X_2} \right )^{2}}{n_1+n_2-2}`
+    
 
 and written in python as a function
 
@@ -140,10 +138,7 @@ and written in python as a function
 
 To determine the breakpoint, all possible "splits" or division into two zones are tested. The breakpoint is the index with the largest ratio of variances, defined as:
 
-.. math:: 
-
-    R = 1 - \frac{MVWZ}{MVAZ}
-    :label: ratio of variances
+:math: `R = 1 - \frac{MVWZ}{MVAZ}`
 
 The python function below allows for an additional paramter to be set which defines the minimum number of samples in window or zone, i.e. no zones should be smaller than this parameter.
 
@@ -186,6 +181,47 @@ implemented in python
             node.left = _anova_recursive_tree_build(node=binarytree.Node(value=knot), a=a[:k], min_samples_in_zone=min_samples_in_zone)
             node.right = _anova_recursive_tree_build(node=binarytree.Node(value=k+knot), a=a[k:], min_samples_in_zone=min_samples_in_zone)
         return node
+
+For example:
+
+.. code-block:: python
+
+    las_obj = lasio.read("data/us49025106110000_0_00028h489546.las")
+
+    df = las_obj.df()
+    df['DEPTH'] = df.index
+    df = df.fillna(method="ffill")
+    df = df.fillna(method="bfill")
+
+    depth = df.index.to_numpy()
+    curve = df['GRD'].to_numpy()
+
+    # select a smaller depth range
+    z_lower_indx = numpy.argwhere(depth > 725)
+    idx0 = z_lower_indx[0,0]
+    z_upper_indx = numpy.argwhere(depth < 875)
+    idx1 = z_upper_indx[-1,0]
+
+    depth = depth[idx0:idx1]
+    curve = curve[idx0:idx1]
+
+    root = _anova_recursive_tree_build(node=binarytree.Node(value=0), a=curve, min_samples_in_zone=25)
+    print(root)
+
+.. code-block::
+
+                          ____________________________0_
+                         /                              \
+        ________________0_____________                  260
+       /                              \
+      0___                       _____129_____
+     /    \                     /             \
+    0     _35___             _129_           _206_
+         /      \           /     \         /     \
+        35      _60_      129     165     206     231
+               /    \
+              60    100
+
 
 Finally, applying the anova zonation in a function
 
