@@ -113,20 +113,17 @@ and written in python as a function
 .. code-block:: python
 
     def _mean_variance_within_zone(zone1:numpy.ndarray, zone2:numpy.ndarray):
-    m1 = numpy.mean(zone1)
-    m2 = numpy.mean(zone2)
-    n1 = len(zone1)
-    n2 = len(zone2)
-    a = numpy.sum(numpy.square(zone1 - m1))
-    b = numpy.sum(numpy.square(zone2 - m2))
-    return (a + b) / (n1 + n2 - 2)
+        m1 = numpy.mean(zone1)
+        m2 = numpy.mean(zone2)
+        n1 = len(zone1)
+        n2 = len(zone2)
+        a = numpy.sum(numpy.square(zone1 - m1))
+        b = numpy.sum(numpy.square(zone2 - m2))
+        return (a + b) / (n1 + n2 - 2)
 
 The mean variance among zones is defined as:
 
-.. math:: 
-
-    MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}
-    :label: mean variance among zones
+.. math:: MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}
 
 and written in python as a function
 
