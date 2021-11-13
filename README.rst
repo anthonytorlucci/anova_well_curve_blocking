@@ -11,11 +11,13 @@ The first step is to read the well data and extract the curve information. This 
 .. _lasio: https://lasio.readthedocs.io/en/latest/index.html
 
 .. code-block:: python
+
     import lasio
     las_obj = lasio.read("data/us49025106110000_0_00028h489546.las")
     print(las_obj.well)
 
-.. code-block:: 
+.. code-block::
+
     Mnemonic  Unit  Value                                Description      
     --------  ----  -----                                -----------      
     STRT      F     32.0                                 START DEPTH      
@@ -34,9 +36,11 @@ The first step is to read the well data and extract the curve information. This 
     API             490251061100                         API NUMBER
 
 .. code-block:: python
+
     print(las_obj.curves)
 
 .. code-block:: 
+
     Mnemonic  Unit  Value         Description                      
     --------  ----  -----         -----------                      
     DEPT      F                                                    
@@ -54,6 +58,7 @@ Nearly all well logging measurement data have missing values. For the purposes o
 .. _pandas.DataFrame.fillna: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.fillna.html
 
 .. code-block:: python
+
     df = las_obj.df()
     df['DEPTH'] = df.index
     df = df.fillna(method="ffill")
@@ -62,6 +67,7 @@ Nearly all well logging measurement data have missing values. For the purposes o
 These examples use the Gamma Ray curve, but any curve could be used.
 
 .. code-block:: python
+
     depth = df.index.to_numpy()
     curve = df['GRD'].to_numpy()
 
@@ -97,12 +103,15 @@ A more robust approach is to use the analysis of variance statistical method to 
 
 The mean variance within zones is defined as:
 
-.. math:: MVWZ = \frac{\sum_{i}^{n_1}\left ( X_i-\overline{X_1} \right )^{2}+\sum_{i}^{n_2}\left ( X_i-\overline{X_2} \right )^{2}}{n_1+n_2-2}
+.. math:: 
+
+    MVWZ = \frac{\sum_{i}^{n_1}\left ( X_i-\overline{X_1} \right )^{2}+\sum_{i}^{n_2}\left ( X_i-\overline{X_2} \right )^{2}}{n_1+n_2-2}
     :label: mean variance within zones
 
 and written in python as a function
 
 .. code-block:: python
+
     def _mean_variance_within_zone(zone1:numpy.ndarray, zone2:numpy.ndarray):
     m1 = numpy.mean(zone1)
     m2 = numpy.mean(zone2)
@@ -114,12 +123,15 @@ and written in python as a function
 
 The mean variance among zones is defined as:
 
-.. math:: MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}
+.. math:: 
+
+    MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}
     :label: mean variance among zones
 
 and written in python as a function
 
 .. code-block::python
+
     def _mean_variance_among_zones(zone1:numpy.ndarray, zone2:numpy.ndarray):
         m1 = numpy.mean(zone1)
         m2 = numpy.mean(zone2)
@@ -130,29 +142,32 @@ and written in python as a function
 
 To determine the breakpoint, all possible "splits" or division into two zones are tested. The breakpoint is the index with the largest ratio of variances, defined as:
 
-.. math:: R = 1 - \frac{MVWZ}{MVAZ}
+.. math:: 
+
+    R = 1 - \frac{MVWZ}{MVAZ}
     :label: ratio of variances
 
 The python function below allows for an additional paramter to be set which defines the minimum number of samples in window or zone, i.e. no zones should be smaller than this parameter.
 
 .. code-block:: python
-def _anova_breakpoint(arr:numpy.ndarray, min_samples_in_zone:int):
-    """determine the optimal breakpoint, i.e. the index with the largest ratio of variances.
-    """
-    if len(arr) < 2*min_samples_in_zone:
-        kbest = None
-    else:
-        kbest = min_samples_in_zone  
-        rbest = 0
-        for k in range(min_samples_in_zone,len(arr)-min_samples_in_zone):
-            z1 = arr[:k]
-            z2 = arr[k:]
-            if _mean_variance_among_zones(zone1=z1, zone2=z2) != 0.0:
-                ratio_of_variances = 1 - (_mean_variance_within_zone(zone1=z1, zone2=z2) / _mean_variance_among_zones(zone1=z1, zone2=z2))
-                if ratio_of_variances > rbest:
-                    rbest = ratio_of_variances
-                    kbest = k
-    return kbest
+
+    def _anova_breakpoint(arr:numpy.ndarray, min_samples_in_zone:int):
+        """determine the optimal breakpoint, i.e. the index with the largest ratio of variances.
+        """
+        if len(arr) < 2*min_samples_in_zone:
+            kbest = None
+        else:
+            kbest = min_samples_in_zone  
+            rbest = 0
+            for k in range(min_samples_in_zone,len(arr)-min_samples_in_zone):
+                z1 = arr[:k]
+                z2 = arr[k:]
+                if _mean_variance_among_zones(zone1=z1, zone2=z2) != 0.0:
+                    ratio_of_variances = 1 - (_mean_variance_within_zone(zone1=z1, zone2=z2) / _mean_variance_among_zones(zone1=z1, zone2=z2))
+                    if ratio_of_variances > rbest:
+                        rbest = ratio_of_variances
+                        kbest = k
+        return kbest
 
 **HERE IS SOMETHING DIFFERENT**
 In reading through the procedure, particularly the first step *Select a zone break point to divide into two new zones*, one may postulate the best data structure for this is a binary tree. The implementation here recursively builds a binary tree (using the third party library and open source project `binarytree`_) where the leaf nodes are the breakpoints in order from left to right. 
@@ -162,6 +177,7 @@ In reading through the procedure, particularly the first step *Select a zone bre
 implemented in python
 
 .. code-block:: python
+
     def _anova_recursive_tree_build(node:binarytree.Node, a:numpy.ndarray, min_samples_in_zone:int):
         """anova
         recursive tree building
@@ -176,6 +192,7 @@ implemented in python
 Finally, applying the anova zonation in a function
 
 .. code-block:: python
+
     def anova_zoning(input_array:numpy.ndarray, min_samples_in_zone=2):
         """anova zoning
         """
