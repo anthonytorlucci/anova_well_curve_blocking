@@ -123,7 +123,8 @@ and written in python as a function
 
 The mean variance among zones is defined as:
 
-.. math:: MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}
+:math: `MVAZ = n_1\left ( \overline{X_1}-\overline{X} \right )^{2}+n_2\left ( \overline{X_2}-\overline{X} \right )^{2}`
+
 
 and written in python as a function
 
@@ -219,4 +220,5 @@ References
 Data
 ----
 The well log provided (./data/us49025106110000_0_00028h489546.las) is part of the open source project `Teapot Dome`_.
+
 .. _Teapot Dome: https://wiki.seg.org/wiki/Teapot_dome_3D_survey
