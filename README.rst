@@ -202,6 +202,7 @@ For example:
         19    31   51    64
 
 .. code-block:: python
+    
     root = _anova_recursive_tree_build(node=binarytree.Node(value=0), a=curve, min_samples_in_zone=6)
     print(root)
 
