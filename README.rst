@@ -2,74 +2,56 @@
 ANOVA WELL LOG BLOCKING
 =======================
 
-Blocking well log curve data is a method of upscaling high resolution petrophysical data (relative to conventional seismic acquisition data) to a lower resolution...
+Blocking well log curve data is a method of upscaling high resolution petrophysical data (relative to conventional seismic acquisition data) to a lower resolution by intelligently blocking zones of geologic packages. Each geologic package is expected have similar properties and the objective is to remove small variations within the package and replace with a single value producing a "blocked" curve.
 
-Importing Well Data
--------------------
-The first step is to read the well data and extract the curve information. This example uses the library `lasio`_ for this purpose.
+For this example, a well from the `Teapot`_ open source dataset has been used. Information from the LAS file is given below.
 
-.. _lasio: https://lasio.readthedocs.io/en/latest/index.html
-
-.. code-block:: python
-
-    import lasio
-    las_obj = lasio.read("data/us49025106110000_0_00028h489546.las")
-    print(las_obj.well)
+.. _Teapot: https://wiki.seg.org/wiki/Teapot_dome_3D_survey
 
 .. code-block::
 
-    Mnemonic  Unit  Value                                Description      
-    --------  ----  -----                                -----------      
-    STRT      F     32.0                                 START DEPTH      
-    STOP      F     1082.0                               STOP DEPTH       
-    STEP      F     0.5                                  STEP LENGTH      
-    NULL            -999.25                              NO VALUE         
-    COMP            FENIX & SCISSON INC                  COMPANY          
-    WELL            NAVAL PETROLEUM RESERVE 3 SX #55-14  WELL             
-    FLD             TEAPOT DOME                          FIELD            
-    LOC             S14 T38N R78W                        LOCATION         
-    CNTY            NATRONA                              COUNTY           
-    STAT            WYOMING                              STATE            
-    CTRY            UNITED STATES OF AMERICA             COUNTRY          
-    SRVC            Unknown                              SERVICE COMPANY  
-    DATE            22-APR-1978                          LOGDATE          
-    API             490251061100                         API NUMBER
+    Mnemonic  Unit  Value                       Description             
+    --------  ----  -----                       -----------             
+    STRT      F     4332.0                      START DEPTH             
+    STOP      F     449.0                       STOP DEPTH              
+    STEP      F     -1.0                        STEP                    
+    NULL            -999.25                     NULL VALUE              
+    COMP            DEPARTMENT OF ENERGY        COMPANY                 
+    WELL            48X-28                      WELL                    
+    FLD             NAVAL PETROLEUM RESERVE #3  FIELD                   
+    LOC             490' FSL, 2449' FWL         LOCATION                
+    CNTY            NATRONA                     COUNTY                  
+    STAT            WYOMING                     STATE                   
+    CTRY                                        COUNTRY                 
+    API             49-025-23195                API NUMBER              
+    UWI                                         UNIQUE WELL ID          
+    DATE            15-Mar-2004                 LOG DATE {DD-MMM-YYYY}  
+    SRVC            Schlumberger                SERVICE COMPANY        
+    LATI      DEG                               LATITUDE                
+    LONG      DEG                               LONGITUDE               
+    GDAT                                        GeoDetic Datum          
+    SECT            28                          Section                 
+    RANG            78W                         Range                   
+    TOWN            39N                         Township                
 
-.. code-block:: python
-
-    print(las_obj.curves)
-
-.. code-block:: 
-
-    Mnemonic  Unit  Value         Description                      
-    --------  ----  -----         -----------                      
-    DEPT      F                                                    
-    SPR       MV    05 010 01 00  SPONTANEOUS POTENTIAL FROM RES.  
-    ILD       OHMM  05 120 46 00  INDUCTION LOG DEEP               
-    SN        OHMM  05 040 16 00  SHORT NORMAL 16"                 
-    GRD       GAPI  45 310 01 00  GAMMA RAY FROM DENSITY LOG       
-    CALD      IN    45 280 60 00  CALIPER                          
-    DPOR      DEC   45 890 12 00  DENSITY POROSITY SANDSTONE       
-    RHOB      G/C3  45 350 01 00  BULK DENSITY                     
-    CORR      G/C3  45 356 01 00  DENSITY CORRECTION
-
-Nearly all well logging measurement data have missing values. For the purposes of these examples, the `pandas.DataFrame.fillna`_ method is used. The functions provided here are simple and assume all missing has been removed or filled in and there are no nan's in the curves.
-
-.. _pandas.DataFrame.fillna: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.fillna.html
-
-.. code-block:: python
-
-    df = las_obj.df()
-    df['DEPTH'] = df.index
-    df = df.fillna(method="ffill")
-    df = df.fillna(method="bfill")
+    Mnemonic  Unit  Value          Description                                                  
+    --------  ----  -----          -----------                                                  
+    RUN             1              RUN NUMBER                                                   
+    PDAT            GROUND LEVEL   Permanent Datum                                              
+    EPD:1     F     5105.0         Elevation of Permanent Datum above Mean Sea Level            
+    EPD:2     F     5105.0         Elevation of tool zero above Mean Sea Level                  
+    LMF             KELLY BUSHING  Logging Measured From (Name of Logging Elevation Reference)  
+    APD                            Elevation of Depth Reference (LMF) above Permanent Datum     
 
 These examples use the Gamma Ray curve, but any curve could be used.
 
 .. code-block:: python
 
+    df = pandas.read_csv('data/490252319500_GammaRay.csv')
+    df = df.set_index('DEPT')
+
     depth = df.index.to_numpy()
-    curve = df['GRD'].to_numpy()
+    curve = df['GR'].to_numpy()
 
 Constant Thickness
 ------------------
@@ -88,7 +70,7 @@ The simplest method of log blocking is to use a constant thickness. This method 
             output_array[n+nsamples:] = numpy.median(input_array[n+nsamples:])
     return output_array
 
-For example, window lengths of 5, 10, 15, and 20 are shown below:
+For example, window lengths of 3, 6, 12, and 24 are shown below:
 
 .. image:: images/constant_thickness_blocking.png
     :alt: constant thickness log blocking example
@@ -186,41 +168,60 @@ For example:
 
 .. code-block:: python
 
-    las_obj = lasio.read("data/us49025106110000_0_00028h489546.las")
+    df = pandas.read_csv('data/490252319500_GammaRay.csv')
+    df = df.set_index('DEPT')
 
-    df = las_obj.df()
-    df['DEPTH'] = df.index
-    df = df.fillna(method="ffill")
-    df = df.fillna(method="bfill")
+    # if missing values, use forward fill and backward fill
+    if df.isnull().values.any():
+        df = df.fillna(method="ffill")
+        df = df.fillna(method="bfill")
 
     depth = df.index.to_numpy()
-    curve = df['GRD'].to_numpy()
+    curve = df['GR'].to_numpy()
 
     # select a smaller depth range
-    z_lower_indx = numpy.argwhere(depth > 725)
+    z_lower_indx = numpy.argwhere(depth > 2800)
     idx0 = z_lower_indx[0,0]
-    z_upper_indx = numpy.argwhere(depth < 875)
+    z_upper_indx = numpy.argwhere(depth < 2900)
     idx1 = z_upper_indx[-1,0]
 
     depth = depth[idx0:idx1]
     curve = curve[idx0:idx1]
 
-    root = _anova_recursive_tree_build(node=binarytree.Node(value=0), a=curve, min_samples_in_zone=25)
+    root = _anova_recursive_tree_build(node=binarytree.Node(value=0), a=curve, min_samples_in_zone=12)
+    print(root)
+
+.. code-block::
+    
+        _________0_________
+       /                   \
+      0___              ____51
+     /    \            /      \
+    0     _19        _51       77
+         /   \      /   \
+        19    31   51    64
+
+.. code-block:: python
+    root = _anova_recursive_tree_build(node=binarytree.Node(value=0), a=curve, min_samples_in_zone=6)
     print(root)
 
 .. code-block::
 
-                          ____________________________0_
-                         /                              \
-        ________________0_____________                  260
-       /                              \
-      0___                       _____129_____
-     /    \                     /             \
-    0     _35___             _129_           _206_
-         /      \           /     \         /     \
-        35      _60_      129     165     206     231
-               /    \
-              60    100
+        _______________________________0_______________
+       /                                               \
+      0__                                     __________51_________
+     /   \                                   /                     \
+    0     7___                             _51___               ____77
+         /    \                           /      \             /      \
+        7     _14___                     51      _57         _77       90
+             /      \                           /   \       /   \
+            14      _20___                     57    66    77    83
+                   /      \
+                  20      _26___
+                         /      \
+                        26      _37
+                               /   \
+                              37    43
 
 
 Finally, applying the anova zonation in a function
@@ -253,8 +254,4 @@ References
 ----------
 - Al-Adani, Nabil, 2012, Data Blockign or Zoning: Well-Log-Data Application: Journal of Canadian Petroleum Technology.
 
-Data
-----
-The well log provided (./data/us49025106110000_0_00028h489546.las) is part of the open source project `Teapot Dome`_.
 
-.. _Teapot Dome: https://wiki.seg.org/wiki/Teapot_dome_3D_survey
