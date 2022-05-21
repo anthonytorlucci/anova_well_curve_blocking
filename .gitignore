@@ -151,4 +151,4 @@ cython_debug/
 .history/
 
 # Misc
-*.pdf
+references/
