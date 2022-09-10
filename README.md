@@ -62,9 +62,9 @@ To determine the breakpoint, all possible "splits" or division into two zones ar
 $$ R = 1 - \frac{MVWZ}{MVAZ} $$
 
 **HERE IS SOMETHING DIFFERENT**
-In reading through the procedure, particularly the first step *Select a zone break point to divide into two new zones*, one may postulate the best data structure for this is a binary tree. The implementation here recursively builds a binary tree (using the third party library and open source project [binarytree](https://binarytree.readthedocs.io/en/main/index.html)) where the leaf nodes are the breakpoints in order from left to right. This is illustrated in the notebook (example_tree.ipynb)[./example_tree.ipynb].
+In reading through the procedure, particularly the first step *Select a zone break point to divide into two new zones*, one may postulate the best data structure for this is a binary tree. The implementation here recursively builds a binary tree (using the third party library and open source project [binarytree](https://binarytree.readthedocs.io/en/main/index.html)) where the leaf nodes are the breakpoints in order from left to right. This is illustrated in the notebook [example_tree.ipynb](./example_tree.ipynb).
 
-Once all the breakpoints are determined, each zone can be "blocked" using the median or mean value within the zone. The result is a "blocked" or "zoned" well curve.
+Once all the breakpoints are determined, each zone can be "blocked" using the median or mean value within the zone. The result is a "blocked" or "zoned" well curve. An example is given in the notebook [example_anova.ipynb](./example_anova.ipynb)
 
 ### References
 - Al-Adani, Nabil, 2012, Data Blocking or Zoning: Well-Log-Data Application: Journal of Canadian Petroleum Technology.
