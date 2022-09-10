@@ -66,5 +66,7 @@ In reading through the procedure, particularly the first step *Select a zone bre
 
 Once all the breakpoints are determined, each zone can be "blocked" using the median or mean value within the zone. The result is a "blocked" or "zoned" well curve. An example is given in the notebook [example_anova.ipynb](./example_anova.ipynb)
 
+![](anova.gif)
+
 ### References
 - Al-Adani, Nabil, 2012, Data Blocking or Zoning: Well-Log-Data Application: Journal of Canadian Petroleum Technology.
